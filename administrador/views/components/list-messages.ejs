@@ -1,0 +1,47 @@
+<div class="col-md-12 offset-0 height-3">
+    <div class="card">
+        <div class=" d-flex align-text-center card-header"> Mensagens: <h6>Nome Do Cliente</h6>
+        </div>
+        <div class="card-body height-3">
+            <ul class="caht-list overflow-auto">
+                <% mensagens.forEach( (mensagem) => { %>
+                <% if(!mensagem.emissor) { %>
+                <li class="d-flex">
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <div class="chat-img position-relative">
+                                <img class="rounded-circle" src="/img/user.jpg" alt="avatar" class="">
+                            </div>
+                            <div class="ms-3 alert alert-secondary chat-message">
+                                <p> <%= mensagem.mensagem %> </p>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <p> <%= mensagem.data %> </p>
+                        </div>
+                    </div>
+                </li>
+                <% } else { %>
+                <li class="d-flex justify-content-end ">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-end ">
+                            <div class="chat-img position-relative">
+                                <img class="rounded-circle" src="/img/user.jpg" alt="avatar" class="">
+                            </div>
+                            <div class="ms-3 alert alert-primary chat-message">
+                                <h6 class="mb-0 align-text-end"> <%= mensagem.autor %> </h6>
+                                <p> <%= mensagem.mensagem %> </p>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6 text-center text-sm-end">
+                            <p> <%= mensagem.data %> </p>
+                        </div>
+                    </div>
+                </li>
+                <% } %>
+                <% } ); %>
+
+            </ul>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,12 @@
+{
+	"env": {
+		"MYSQL_LIMIT_CONNECTION": 999999,
+		"MYSQL_USER": "root",
+		"MYSQL_PASSWRD": "",
+		"MYSQL_DATABASE": "db_cardapio",
+		"MYSQL_HOST": "localhost",
+		"MYSQL_PORT": 3306,
+		"API_HOST": "http://localhost",
+		"API_PORT": 3000
+	}
+}

@@ -1,0 +1,38 @@
+<!-- views/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Itens</title>
+</head>
+<body>
+  <h1>Itens</h1>
+  <ul id="item-list">
+    <!-- Itens serão adicionados dinamicamente aqui -->
+  </ul>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    socket.emit('getItems'); // Solicitação inicial para obter itens
+
+    socket.on('items', (items) => {
+      const itemList = document.getElementById('item-list');
+      itemList.innerHTML = ''; // Limpa a lista
+
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <h2>${item.name}</h2>
+          <p>${item.description}</p>
+          <p>Preço: ${item.price}</p>
+        `;
+        itemList.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
