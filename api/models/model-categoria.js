@@ -106,10 +106,10 @@ const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) =
 
         console.log(editar)
 
-        /*if(editar.affectedRows >= 1){
-            return await selectID(inserir.insertId)
+        if(editar.affectedRows >= 1){
+            return await select(id,categoria,null,null,true)
         }
-        */
+        
     }
     
     return []
@@ -132,10 +132,18 @@ const insert = async (categoria=null) => {
     return []
 }
 
+const delete = async (id=null) => {
+    if( id == null ) return []
+    
+    return await update(id,null,1,2)
+}
+
 
 module.exports = {
     model,
     select,
     selectID,
-    insert
+    insert,
+    update,
+    delete
 }
