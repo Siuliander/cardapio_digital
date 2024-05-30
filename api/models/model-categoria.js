@@ -1,4 +1,3 @@
-const { EMPTY } = require('sqlite3')
 const mysql = require('./../database/mysql')
 const { SET } = require('mysql/lib/protocol/constants/types')
 
