@@ -16,13 +16,11 @@ app.use( xss() )
 /**
  * IMPORTANDO AS ROTAS
  */
-const rotaAPIDoc = require('./routers/route-api-doc');
 const rotaCategoria = require('./routers/route-categoria');
 
 /**
  * USANDO OU CRIANDO AS ROTAS
  */
-app.use('/',rotaAPIDoc);
 app.use('/categoria/',rotaCategoria);
 
 
