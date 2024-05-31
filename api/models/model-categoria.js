@@ -1,12 +1,10 @@
 const mysql = require('./../database/mysql')
-const { SET } = require('mysql/lib/protocol/constants/types')
 
-const model = (data = []) => {
-    const {id} = data || null
-    const {categoria} = data || null
-    const {estado} = data || 2
-
-	return { id , categoria , estado }
+const row = (affectedRows=0, data=[]) => {
+    return {
+        affectedRows,
+        rows: data
+    }
 }
 
 const select = async (id=null, categoria=null, estado=null , limitRows = null, precisao=false) => {
@@ -37,9 +35,9 @@ const select = async (id=null, categoria=null, estado=null , limitRows = null, p
         JOIN tb_estado AS estado
             ON estado.id_estado = categoria.id_estado
         ${where} ${orderby} ${limit}` 
-    const result = await mysql.execute(query, params);
+    const result = await mysql.execute(query, params)
 
-    return result;
+    return result
 }
 
 const selectID = async (id = 0) => {
@@ -54,22 +52,33 @@ const selectID = async (id = 0) => {
         WHERE 1 = 1 AND id_categoria = ? LIMIT 1`
     const result = await mysql.execute(query, params);
 
-    return result;
+    return result
 }
 
 const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) => {
-    if( id == null || isNaN(id) ) return []
+
+    if( id == null || isNaN(id) ) return row(0,[])
     if( 
         /* ( estado == -1 ) ||*/ 
         (
             ( Newcategoria == null || !isNaN(Newcategoria) ) &&  ( Newestado == null || isNaN(Newestado) )
         )
-    ) return []
+    ) return row(0,[])
 
     let set = ''
     let where = 'WHERE 1 = 1'
     let limit = 'LIMIT 1'
     let params = []
+
+    if( Newcategoria != null && isNaN(Newcategoria) ) { 
+        set +=  (set=='') ? 'SET categoria = ?' : ', categoria = ?'
+        params.push( Newcategoria )
+    }
+    
+    if( Newestado != null && !isNaN(Newestado) ) { 
+        set +=  (set=='') ? 'SET id_estado = ?' : ', id_estado = ?'
+        params.push( Newestado )
+    }
 
     if( id != null ) { 
         where += ' AND id_categoria = ?'
@@ -87,62 +96,108 @@ const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) =
         params.push( estado )
     }
     
-    if( Newcategoria != null && isNaN(Newcategoria) ) { 
-        set +=  (set=='') ? 'SET categoria = ?' : ', categoria = ?'
-        params.push( Newcategoria )
-    }
-    
-    if( Newestado != null && !isNaN(Newestado) ) { 
-        set +=  (set=='') ? 'SET id_estado = ?' : ', id_estado = ?'
-        params.push( Newestado )
-    }
-    console.log( set )
-    const verificar = await select(id,Newcategoria,estado,null,true)
+    const verificarID = await selectID(id)
+    const verificarCategoria = await select(null,Newcategoria,null,null,true)
 
-    if(verificar.length >= 1) {
+    if(verificarID.length >= 1) {
+        
+        if(verificarID[0].id_estado != 2) return row(0,[])
+
+        if(verificarCategoria.length >= 1) {
+            if(verificarID.id == verificarCategoria.id) return row(0,verificarID)
+            if(verificarCategoria.estado == 1) return row(0,[])
+        }
+
         const query = `UPDATE tb_categoria ${set} ${where} ${limit}`
         const editar = await mysql.execute(query, params);
 
-        console.log(editar)
-
         if(editar.affectedRows >= 1){
-            return await select(id,categoria,null,null,true)
+            return row(editar.affectedRows,await select(id,Newcategoria,null,null,true))
         }
-        
     }
     
-    return []
+    return row(0,[])
+}
+
+const recover = async (id=null) => {
+
+    if( id == null || isNaN(id) ) return row(0,[])
+    
+    let where = 'WHERE 1 = 1'
+    let limit = 'LIMIT 1'
+    let params = []
+
+    if( id != null ) { 
+        where += ' AND id_categoria = ?'
+        limit = 'LIMIT 1'
+        params.push(id)
+    }
+
+    const recuperar = await mysql.execute(`UPDATE tb_categoria SET id_estado = 2 ${where} ${limit}`, params);
+    
+    console.log({recuperar})
+    
+    if(recuperar.affectedRows >= 1){
+        return row(recuperar.affectedRows,await selectID(id))
+    }
+    
+    return row(0,[])
 }
 
 const insert = async (categoria=null) => {
-    if( !isNaN(categoria) || categoria == null) return []
+    if( !isNaN(categoria) || categoria == null) return row(0,[])
 
     const verificar = await select(null,categoria,-1,1,true)
 
     if(verificar.length >= 1) {
-        if(verificar[0].id_estado != 2) return await update(verificar[0].id,categoria,2,-1)
+        if(verificar[0].id_estado != 2) return await recover(verificar[0].id) 
     } else {
         const inserir = await mysql.execute('INSERT INTO tb_categoria(categoria) VALUES(?)', [categoria]);
+        console.log( inserir)
         if(inserir.affectedRows >= 1){
-            return await selectID(inserir.insertId)
+            return row( inserir.affectedRows ,await selectID(inserir.insertId) )
         }
     }
     
-    return []
+    return row(0,[])
 }
 
-const delete = async (id=null) => {
-    if( id == null ) return []
+const deleted = async (id=null) => {
+    if( id == null || isNaN(id) ) return row(0,[])
     
-    return await update(id,null,1,2)
+    const verificarID = await selectID(id)
+
+    if(verificarID.length >= 1) {
+        
+        if(verificarID[0].id_estado != 2) return row(0,[])
+
+        let where = 'WHERE 1 = 1'
+        let limit = 'LIMIT 1'
+        let params = []
+
+        if( id != null ) { 
+            where += ' AND id_categoria = ?'
+            limit = 'LIMIT 1'
+            params.push(id)
+        }
+
+        const query = `UPDATE tb_categoria SET id_estado = 1 ${where} ${limit}`
+        const editar = await mysql.execute(query, params);
+
+        if(editar.affectedRows >= 1){
+            return row(editar.affectedRows,[])
+        }
+    }
+    row(0,[])
 }
 
 
 module.exports = {
-    model,
+    row,
     select,
     selectID,
     insert,
     update,
-    delete
+    deleted,
+    recover
 }

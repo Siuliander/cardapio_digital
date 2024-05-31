@@ -37,4 +37,48 @@ router.post('/', async (req, res) => {
     }
 })
 
+router.put('/', async (req, res) => {
+    let result = []
+    let statusCode = 200
+    try {
+        result = await controllerCategoria.putCategoria(req)
+    } catch (err) {
+    } finally {
+        res.status(statusCode).json( result )
+    }
+})
+
+router.put('/:id', async (req, res) => {
+    let result = []
+    let statusCode = 200
+    try {
+        result = await controllerCategoria.putCategoria(req)
+    } catch (err) {
+    } finally {
+        res.status(statusCode).json( result )
+    }
+})
+
+router.delete('/', async (req, res) => {
+    let result = []
+    let statusCode = 200
+    try {
+        result = await controllerCategoria.deleteCategoria(req)
+    } catch (err) {
+    } finally {
+        res.status(statusCode).json( result )
+    }
+})
+
+router.delete('/:id', async (req, res) => {
+    let result = []
+    let statusCode = 200
+    try {
+        result = await controllerCategoria.deleteCategoria(req)
+    } catch (err) {
+    } finally {
+        res.status(statusCode).json( result )
+    }
+})
+
 module.exports = router
