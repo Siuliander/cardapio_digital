@@ -7,11 +7,11 @@ const row = (affectedRows=0, data=[]) => {
     }
 }
 
-const select = async (id=null, identidade=null, nome=null , limitRows = null, precisao=false) => {
+const select = async (id=null, identidade=null, nome=null , id_sexo=null, sexo=null, limitRows = null, precisao=false) => {
 
     let limit = (limitRows==null) ? '' : (!isNaN(limitRows) ? `LIMIT ${limitRows}` : '')
     let where = 'WHERE 1 = 1'
-    let orderby = 'ORDER BY 2 ASC'
+    let orderby = 'ORDER BY nome ASC'
     let params = []
     
     if( id != null ) { 
@@ -30,11 +30,21 @@ const select = async (id=null, identidade=null, nome=null , limitRows = null, pr
         params.push( `%${nome}%` )
     }
 
+    if( id_sexo != null ) { 
+        where += ' AND pessoa.id_sexo LIKE ?'
+        params.push( `%${id_sexo}%` )
+    }
+
+    if( sexo != null ) { 
+        where += ' AND sexo LIKE ?'
+        params.push( `%${sexo}%` )
+    }
+
     const query = `
-        SELECT categoria.id_categoria AS id, categoria.categoria, categoria.id_estado, estado.estado
-            FROM tb_categoria As categoria
-        JOIN tb_estado AS estado
-            ON estado.id_estado = categoria.id_estado
+        SELECT id_entidade AS id, identidade, nome, pessoa.id_sexo, sexo 
+            FROM tb_entidade As pessoa 
+        LEFT JOIN tb_sexo as sexo 
+            ON pessoa.id_sexo = sexo.id_sexo
         ${where} ${orderby} ${limit}` 
     const result = await mysql.execute(query, params)
 
@@ -46,11 +56,11 @@ const selectID = async (id = 0) => {
     const params = [id]
 
     const query = `
-        SELECT id_entidade AS id, identidade, nome, pessoa.id_sexo, sexo  
-            FROM tb_entidade As pessoa
-        LEFT JOIN tb_sexo as sexo
+        SELECT id_entidade AS id, identidade, nome, pessoa.id_sexo, sexo 
+            FROM tb_entidade As pessoa 
+        LEFT JOIN tb_sexo as sexo 
             ON pessoa.id_sexo = sexo.id_sexo
-        WHERE 1 = 1 AND id_categoria = ? LIMIT 1`
+        WHERE 1 = 1 AND id_entidade = ? LIMIT 1`
     const result = await mysql.execute(query, params);
 
     return result
