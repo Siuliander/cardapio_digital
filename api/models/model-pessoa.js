@@ -51,101 +51,120 @@ const select = async (id=null, identidade=null, nome=null , id_sexo=null, sexo=n
     return result
 }
 
-const selectID = async (id = 0) => {
-
-    const params = [id]
-
+const selectID = async (id = 0,identidade = null) => {
+    if(id == null && identidade == null) return []
+    
+    let where = 'WHERE 1 = 1'
+    let params = []
+    
+    if( id != null ) { 
+        where += ' AND id_pessoa = ?'
+        params.push(id)
+    }
+    
+    if( identidade != null ) { 
+        where += ' AND identidade
+        params.push(identidade)
+    }
+    
     const query = `
         SELECT id_entidade AS id, identidade, nome, pessoa.id_sexo, sexo 
             FROM tb_entidade As pessoa 
         LEFT JOIN tb_sexo as sexo 
             ON pessoa.id_sexo = sexo.id_sexo
-        WHERE 1 = 1 AND id_entidade = ? LIMIT 1`
+        ${where} LIMIT 1`
     const result = await mysql.execute(query, params);
 
     return result
 }
 
-const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) => {
+const update = async (id=null, NewIdentidade=null, NewNome=null, NewSexo=null) => {
 
-    if( id == null || isNaN(id) ) return row(0,[])
-    if( 
-        /* ( estado == -1 ) ||*/ 
-        (
-            ( Newcategoria == null || !isNaN(Newcategoria) ) &&  ( Newestado == null || isNaN(Newestado) )
-        )
-    ) return row(0,[])
-
-    let set = ''
-    let where = 'WHERE 1 = 1'
-    let limit = 'LIMIT 1'
-    let params = []
-
-    if( Newcategoria != null && isNaN(Newcategoria) ) { 
-        set +=  (set=='') ? 'SET categoria = ?' : ', categoria = ?'
-        params.push( Newcategoria )
-    }
+    if( id == null || isNaN(id) ) return "ENTIDADE NÃO ESPECIFICADA"
     
-    if( Newestado != null && !isNaN(Newestado) ) { 
-        set +=  (set=='') ? 'SET id_estado = ?' : ', id_estado = ?'
-        params.push( Newestado )
-    }
-
-    if( id != null ) { 
-        where += ' AND id_categoria = ?'
-        limit = 'LIMIT 1'
-        params.push(id)
-    }
-
-    if( estado != null && estado != -1 && !isNaN(estado) ) { 
-        where += ' AND id_estado = ?'
-        params.push( estado )
-    }
-
-    if( estado == null || isNaN(estado) ) { 
-        where += ' AND id_estado = 2'
-        params.push( estado )
-    }
-    
-    const verificarID = await selectID(id)
-    const verificarCategoria = await select(null,Newcategoria,null,null,true)
+    const verificarID = await selectID(id,null)
+    const verificarIDENTUDADE = await selectID(null,identidade)
 
     if(verificarID.length >= 1) {
         
-        if(verificarID[0].id_estado != 2) return row(0,[])
-
-        if(verificarCategoria.length >= 1) {
-            if(verificarID.id == verificarCategoria.id) return row(0,verificarID)
-            if(verificarCategoria.estado == 1) return row(0,[])
+        if(verificarIDENTIDADE.length >= 1) {
+            if(verificarID.id != verificarIDENTIDADE.id) return "IDENTIDADE NÃO DISPONÍVEL"
         }
-
-        const query = `UPDATE tb_categoria ${set} ${where} ${limit}`
+        
+        let set = ''
+        let where = 'WHERE 1 = 1'
+        let limit = 'LIMIT 1'
+        let params = []
+    
+        if( NewIdentidade != null ) { 
+            set +=  (set=='') ? 'SET identidade = ?' : ', identidade = ?'
+            params.push( NewIdentidade )
+        }
+        
+        if( NewNome != null && isNaN(NewNome) ) { 
+            set +=  (set=='') ? 'SET nome = ?' : ', nome = ?'
+            params.push( NewNome )
+        }
+        
+        if( NewSexo != null && !isNaN(NewSexo) ) { 
+            set +=  (set=='') ? 'SET id_sexo = ?' : ', id_sexo = ?'
+            params.push( NewSexo )
+        }
+    
+        if( id != null ) { 
+            where += ' AND id_entidade = ?'
+            limit = 'LIMIT 1'
+            params.push(id)
+        }
+        const query = `UPDATE tb_entidade ${set} ${where} ${limit}`
         const editar = await mysql.execute(query, params);
 
         if(editar.affectedRows >= 1){
-            return row(editar.affectedRows,await select(id,Newcategoria,null,null,true))
+            return row(editar.affectedRows,await selectID(id,identidade))
         }
     }
     
-    return row(0,[])
+    return "ENTIDADE NÃO ENCONTRADA" // return row(0,[])
 }
 
-const insert = async (categoria=null) => {
-    if( !isNaN(categoria) || categoria == null) return row(0,[])
+const insert = async (identidade=null, nome=null, sexo=null) => {
+    if( identidade == null || (nome == null || !isNaN(nome)) ) return "DADOS INSUFICIENTES PARA ENTIDADE" // return row(0,[])
 
-    const verificar = await select(null,categoria,-1,1,true)
+    const verificar = await selectID(null,identidade)
 
     if(verificar.length >= 1) {
-        if(verificar[0].id_estado != 2) return await recover(verificar[0].id) 
+        return "IDENTIDADE NÃO DISPONÍVEL" // return row(0,verificar)
     } else {
-        const inserir = await mysql.execute('INSERT INTO tb_categoria(categoria) VALUES(?)', [categoria]);
-        console.log( inserir)
+        
+        let colums = ''
+        let values = ''
+        let params = []
+    
+        if( identidade != null ) { 
+            colums +=  (colums=='') ? 'identidade' : ',identidade'
+            values +=  (values=='') ? '?' : ',?'
+            params.push( identidade )
+        }
+        
+        if( nome != null && isNaN(nome) ) { 
+            colums +=  (colums=='') ? 'nome' : ',nome'
+            values +=  (values=='') ? '?' : ',?'
+            params.push( nome )
+        }
+        
+        if( sexo != null && !isNaN(sexo) ) { 
+            colums +=  (colums=='') ? 'id_sexo' : ',id_sexo'
+            values +=  (values=='') ? '?' : ',?'
+            params.push( sexo )
+        }
+        const inserir = await mysql.execute(`INSERT INTO tb_entidade (${colums}) VALUES(${values})`, params);
+        
         if(inserir.affectedRows >= 1){
-            return row( inserir.affectedRows ,await selectID(inserir.insertId) )
+            return row( inserir.affectedRows ,await selectID(inserir.insertId,null) )
         }
     }
     
-    return row(0,[])
+    return "ENTIDADE NÃO FOI CRIADA" // return row(0,[])
 }
 
 
