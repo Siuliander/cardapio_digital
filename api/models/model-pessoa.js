@@ -63,7 +63,7 @@ const selectID = async (id = 0,identidade = null) => {
     }
     
     if( identidade != null ) { 
-        where += ' AND identidade
+        where += ' AND identidade = ?'
         params.push(identidade)
     }
     
