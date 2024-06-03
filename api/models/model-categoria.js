@@ -19,6 +19,7 @@ const select = async (id=null, categoria=null, estado=null , limitRows = null, p
         limit = 'LIMIT 1'
         params.push(id)
     }
+    
     if( estado != -1 ) { 
         where += ' AND categoria.id_estado = ?'
         params.push( (estado == null) ? 2 : estado )
@@ -111,8 +112,8 @@ const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) =
         if(verificarID[0].id_estado != 2) return row(0,[])
 
         if(verificarCategoria.length >= 1) {
-            if(verificarID.id == verificarCategoria.id) return row(0,verificarID)
-            if(verificarCategoria.estado == 1) return row(0,[])
+            if(verificarID[0].id == verificarCategoria[0].id) return row(0,verificarID)
+            if(verificarCategoria[0].estado == 1) return row(0,[])
         }
 
         const query = `UPDATE tb_categoria ${set} ${where} ${limit}`

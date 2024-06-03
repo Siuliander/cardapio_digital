@@ -17,11 +17,13 @@ app.use( xss() )
  * IMPORTANDO AS ROTAS
  */
 const rotaCategoria = require('./routers/route-categoria');
+const rotaCliente = require('./routers/route-cliente');
 
 /**
  * USANDO OU CRIANDO AS ROTAS
  */
 app.use('/categoria/',rotaCategoria);
+app.use('/cliente/',rotaCliente);
 
 
 
@@ -31,4 +33,4 @@ app.use('/categoria/',rotaCategoria);
 
 const PORT = process.env.API_PORT || 3000;
 const HOST = process.env.API_HOST || '127.0.0.1';
-app.listen( PORT , console.log( `Servidor rodando: { Host: ${HOST} , Port: ${PORT}`) )
+app.listen( PORT , console.log( `Servidor rodando: { Host: ${HOST} , Port: ${PORT} }`) )

@@ -15,7 +15,7 @@ const select = async (id=null, identidade=null, nome=null , id_sexo=null, sexo=n
     let params = []
     
     if( id != null ) { 
-        where += ' AND id_pessoa = ?'
+        where += ' AND id_entidade = ?'
         limit = 'LIMIT 1'
         params.push(id)
     }
@@ -26,13 +26,13 @@ const select = async (id=null, identidade=null, nome=null , id_sexo=null, sexo=n
     }
     
     if( nome != null ) { 
-        where += ' AND nome_pessoa LIKE ?'
+        where += ' AND nome LIKE ?'
         params.push( `%${nome}%` )
     }
 
     if( id_sexo != null ) { 
-        where += ' AND pessoa.id_sexo LIKE ?'
-        params.push( `%${id_sexo}%` )
+        where += ' AND pessoa.id_sexo = ?'
+        params.push( id_sexo )
     }
 
     if( sexo != null ) { 
@@ -58,7 +58,7 @@ const selectID = async (id = 0,identidade = null) => {
     let params = []
     
     if( id != null ) { 
-        where += ' AND id_pessoa = ?'
+        where += ' AND id_entidade = ?'
         params.push(id)
     }
     
@@ -79,16 +79,15 @@ const selectID = async (id = 0,identidade = null) => {
 }
 
 const update = async (id=null, NewIdentidade=null, NewNome=null, NewSexo=null) => {
-
     if( id == null || isNaN(id) ) return "ENTIDADE NÃO ESPECIFICADA"
     
     const verificarID = await selectID(id,null)
-    const verificarIDENTUDADE = await selectID(null,identidade)
+    const verificarIDENTIDADE = await selectID(null,NewIdentidade)
 
     if(verificarID.length >= 1) {
         
         if(verificarIDENTIDADE.length >= 1) {
-            if(verificarID.id != verificarIDENTIDADE.id) return "IDENTIDADE NÃO DISPONÍVEL"
+            if(verificarID[0].id != verificarIDENTIDADE[0].id) return "IDENTIDADE NÃO DISPONÍVEL"
         }
         
         let set = ''
@@ -120,7 +119,7 @@ const update = async (id=null, NewIdentidade=null, NewNome=null, NewSexo=null) =
         const editar = await mysql.execute(query, params);
 
         if(editar.affectedRows >= 1){
-            return row(editar.affectedRows,await selectID(id,identidade))
+            return row(editar.affectedRows,await selectID(id,NewIdentidade))
         }
     }
     
@@ -133,7 +132,7 @@ const insert = async (identidade=null, nome=null, sexo=null) => {
     const verificar = await selectID(null,identidade)
 
     if(verificar.length >= 1) {
-        return "IDENTIDADE NÃO DISPONÍVEL" // return row(0,verificar)
+        return row(1,verificar) // return "IDENTIDADE NÃO DISPONÍVEL" 
     } else {
         
         let colums = ''
