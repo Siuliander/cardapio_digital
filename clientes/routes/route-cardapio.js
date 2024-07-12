@@ -33,7 +33,7 @@ router.get('/', (req, res) => {
         err = error;
         console.log(err)
     } finally {
-        res.status(codeStatus).render(__dirname + '/template', { page: 'cardapio', data , err })
+        res.status(codeStatus).render('template', { page: 'cardapio', data , err })
     }
 })
 
