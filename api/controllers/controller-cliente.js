@@ -110,9 +110,8 @@ exports.delete = async (req) => {
     try {
         const id = req.params.id || req.query.id || req.body.id ||  null;
         result = await modelCliente.deleted(id)
-        
     } catch (err) {
-        // error = err
+        //error = err
         console.log(err)
     } finally {
         return response(result,error)
