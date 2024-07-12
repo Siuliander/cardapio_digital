@@ -24,6 +24,7 @@ const rotaCliente = require('./routers/route-cliente');
  */
 app.use('/categoria/',rotaCategoria);
 app.use('/cliente/',rotaCliente);
+app.get('/', ( req, res ) => { res.status(200).json( {"success":"ok"}) })
 
 
 
