@@ -35,6 +35,6 @@ app.use('/:404',rota404);
 /**
  * INICIALIZANDO O SERVIDOR 
  */
-const server_port = process.env.PORT || 80;
+const server_port = process.env.PORT ;
 
 app.listen( server_port , console.log(`Servidor Rodando na Porta ${server_port}`) );
