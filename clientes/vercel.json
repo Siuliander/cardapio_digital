@@ -4,19 +4,26 @@
 		{
 			"src": "./index.js",
 			"use": "@vercel/node"
+		},
+		{
+			"src": "./public/**/*.*",
+			"use": "@vercel/static"
+		},
+		{
+			"src": "./views/**/*.ejs",
+			"use": "@vercel/static"
 		}
 	],
 	"routes": [
 		{
 			"src": "(.*)",
 			"dest": "/"
+		},
+		{
+			"src": "**/(.*)",
+			"dest": "**/"
 		}
 	],
     
-  "functions": {
-    "**/*.ejs": {
-      "includeFiles": "**/*.ejs"
-    }
-  }
 		
 }
