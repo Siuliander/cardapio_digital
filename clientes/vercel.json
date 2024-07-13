@@ -11,6 +11,13 @@
 			"src": "(.*)",
 			"dest": "/"
 		}
-	]
+	],
+    
+  "functions": {
+    "**/*.ejs": {
+      "includeFiles": "**/*.ejs"
+    }
+  }
+}
 	
 }
