@@ -178,10 +178,10 @@ const recover = async (id=null) => {
 
     if(verificarID.length >= 1) {
         if( verificarID[0].estado != 2 ){
-            const editar = await mysql.execute(`UPDATE tb_cliente SET id_estado = 12 WHERE id_cliente = ? LIMIT 1`, [id]);
-
+            const editar = await mysql.execute(`UPDATE tb_cliente SET id_estado = 2 WHERE id_cliente = ? LIMIT 1`, [id]);
+console.log(editar)
             if(editar.affectedRows >= 1){
-                return row(editar.affectedRows,await selectID(id,idPessoa,NewIdentidade),"CRLIENTE RECUPERADO COM SUCESSO")
+                return row(editar.affectedRows,await selectID(id,null,null),"CRLIENTE RECUPERADO COM SUCESSO")
             }
         }
     }

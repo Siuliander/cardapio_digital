@@ -36,6 +36,7 @@ create table if not exists tb_produto
     foreign key(id_categoria) references tb_categoria(id_categoria),
     produto varchar(255) not null unique,
     descricao_produto text null,
+    imagem_produto varchar(255) null,
     id_estado int not null default 2,
     foreign key(id_estado) references tb_estado(id_estado)
 );

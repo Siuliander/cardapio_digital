@@ -59,7 +59,7 @@ exports.getID = async (req) => {
     let error = null
     try {
         const id = req.params.id ||  null;
-        result = await modelCliente.selectID(id)
+        result = await modelCliente.select(id,null,null,null,2,1,true)
     } catch (err) {
         console.log(err)
     } finally {
@@ -110,6 +110,20 @@ exports.delete = async (req) => {
     try {
         const id = req.params.id || req.query.id || req.body.id ||  null;
         result = await modelCliente.deleted(id)
+    } catch (err) {
+        //error = err
+        console.log(err)
+    } finally {
+        return response(result,error)
+    }
+}
+
+exports.recover = async (req) => {
+    let result = [];
+    let error = null
+    try {
+        const id = req.params.id || req.query.id || req.body.id ||  null;
+        result = await modelCliente.recover(id)
     } catch (err) {
         //error = err
         console.log(err)

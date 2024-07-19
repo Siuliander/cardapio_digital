@@ -81,4 +81,26 @@ router.delete('/:id', async (req, res) => {
     }
 })
 
+router.patch('/', async (req, res) => {
+    let result = []
+    let statusCode = 200
+    try {
+        result = await controllerCliente.recover(req)
+    } catch (err) {
+    } finally {
+        res.status(statusCode).json( result )
+    }
+})
+
+router.patch('/:id', async (req, res) => {
+    let result = []
+    let statusCode = 200
+    try {
+        result = await controllerCliente.recover(req)
+    } catch (err) {
+    } finally {
+        res.status(statusCode).json( result )
+    }
+})
+
 module.exports = router
