@@ -1,9 +1,10 @@
 const mysql = require('../database/mysql')
 
-const row = (affectedRows = 0, data = []) => {
+const row = (affectedRows = 0, data = [], message=null) => {
     return {
         affectedRows,
-        rows: data
+        rows: data,
+        message:message
     }
 }
 
