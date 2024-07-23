@@ -1,9 +1,10 @@
 const mysql = require('./../database/mysql')
 
-const row = (affectedRows=0, data=[]) => {
+const row = (affectedRows=0, data=[], message=null) => {
     return {
         affectedRows,
-        rows: data
+        rows: data,
+        message:message
     }
 }
 
@@ -65,13 +66,13 @@ const selectID = async (id = 0,estado = null) => {
 
 const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) => {
 
-    if( id == null || isNaN(id) ) return row(0,[])
+    if( id == null || isNaN(id) ) return row(0,[], null )
     if( 
         /* ( estado == -1 ) ||*/ 
         (
             ( Newcategoria == null || !isNaN(Newcategoria) ) &&  ( Newestado == null || isNaN(Newestado) )
         )
-    ) return row(0,[])
+    ) return row(0,[], null )
 
     let set = ''
     let where = 'WHERE 1 = 1'
@@ -109,27 +110,27 @@ const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) =
 
     if(verificarID.length >= 1) {
         
-        if(verificarID[0].id_estado != 2) return row(0,[])
+        if(verificarID[0].id_estado != 2) return row(0,[], null )
 
         if(verificarCategoria.length >= 1) {
-            if(verificarID[0].id == verificarCategoria[0].id) return row(0,verificarID)
-            if(verificarCategoria[0].estado == 1) return row(0,[])
+            if(verificarID[0].id == verificarCategoria[0].id) return row(0,verificarID,null)
+            if(verificarCategoria[0].estado == 1) return row(0,[], null )
         }
 
         const query = `UPDATE tb_categoria ${set} ${where} ${limit}`
         const editar = await mysql.execute(query, params);
 
         if(editar.affectedRows >= 1){
-            return row(editar.affectedRows,await select(id,Newcategoria,null,null,true))
+            return row(editar.affectedRows,await select(id,Newcategoria,null,null,true),null)
         }
     }
     
-    return row(0,[])
+    return row(0,[], null )
 }
 
 const recover = async (id=null) => {
 
-    if( id == null || isNaN(id) ) return row(0,[])
+    if( id == null || isNaN(id) ) return row(0,[], null )
     
     let where = 'WHERE 1 = 1'
     let limit = 'LIMIT 1'
@@ -143,17 +144,17 @@ const recover = async (id=null) => {
 
     const recuperar = await mysql.execute(`UPDATE tb_categoria SET id_estado = 2 ${where} ${limit}`, params);
     
-    console.log({recuperar})
+    // console.log({recuperar})
     
     if(recuperar.affectedRows >= 1){
-        return row(recuperar.affectedRows,await selectID(id,null))
+        return row(recuperar.affectedRows,await selectID(id,null),null)
     }
     
-    return row(0,[])
+    return row(0,[], null )
 }
 
 const insert = async (categoria=null) => {
-    if( !isNaN(categoria) || categoria == null) return row(0,[])
+    if( !isNaN(categoria) || categoria == null) return row(0,[], null )
 
     const verificar = await select(null,categoria,-1,1,true)
 
@@ -161,23 +162,23 @@ const insert = async (categoria=null) => {
         if(verificar[0].id_estado != 2) return await recover(verificar[0].id) 
     } else {
         const inserir = await mysql.execute('INSERT INTO tb_categoria(categoria) VALUES(?)', [categoria]);
-        console.log( inserir)
+        // console.log( inserir)
         if(inserir.affectedRows >= 1){
-            return row( inserir.affectedRows ,await selectID(inserir.insertId,null) )
+            return row( inserir.affectedRows ,await selectID(inserir.insertId,null), null )
         }
     }
     
-    return row(0,[])
+    return row(0,[], null )
 }
 
 const deleted = async (id=null) => {
-    if( id == null || isNaN(id) ) return row(0,[])
+    if( id == null || isNaN(id) ) return row(0,[], null )
     
     const verificarID = await selectID(id,-1)
 
     if(verificarID.length >= 1) {
         
-        if(verificarID[0].id_estado != 2) return row(0,[])
+        if(verificarID[0].id_estado != 2) return row(0,[], null )
 
         let where = 'WHERE 1 = 1'
         let limit = 'LIMIT 1'
@@ -193,10 +194,10 @@ const deleted = async (id=null) => {
         const editar = await mysql.execute(query, params);
 
         if(editar.affectedRows >= 1){
-            return row(editar.affectedRows,[])
+            return row(editar.affectedRows,[], null )
         }
     }
-    row(0,[])
+    row(0,[], null )
 }
 
 

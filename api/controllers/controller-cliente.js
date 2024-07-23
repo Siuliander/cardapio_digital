@@ -46,7 +46,7 @@ exports.getAll = async (req) => {
         result = await modelCliente.select(id,identidade,nome,sexo,estado,limit,precisao)
         
     } catch (err) {
-        error = err
+        // error = err
         console.log(err)
     } finally {
 

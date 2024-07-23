@@ -22,7 +22,8 @@ const response = (data = [], error = []) => {
 					url: `${process.env.API_HOST}:${process.env.API_PORT}/produto/${item.id}`
 				}
 			}
-		})
+		}),
+        message: data.message,
 	}
 	
 	return json
