@@ -1,41 +1,69 @@
 const mysql = require('../database/mysql')
 
-const row = (affectedRows=0, data=[]) => {
+const modelCategoria = require("./model-categoria")
+
+const row = (affectedRows=0, data=[], message=null) => {
     return {
         affectedRows,
-        rows: data
+        rows: data,
+        message:message
     }
 }
 
-const select = async (id=null, produto=null, categoria=null, estado=null , limitRows = null, precisao=false) => {
+const select = async (q=null, id=null, categoria=null, estado=null , limitRows = null, precisao=false) => {
 
     let limit = (limitRows==null) ? '' : (!isNaN(limitRows) ? `LIMIT ${limitRows}` : '')
-    let where = 'WHERE 1 = 1'
+    let where = 'WHERE 1 = 1 AND produto.id_estado = 2 AND categoria.id_estado = 2 AND preco_produto.id_estado = 2 '
     let orderby = 'ORDER BY 2 ASC'
     let params = []
     
-    if( id != null ) { 
-        where += ' AND id_produto = ?'
-        limit = 'LIMIT 1'
-        params.push(id)
-    }
     
-    if( estado != -1 ) { 
-        where += ' AND produto.id_estado = ?'
-        params.push( (estado == null) ? 2 : estado )
-    }
-    
-    if( categoria != null ) { 
-        where += precisao ? ' AND produto = ?' : ' AND produto LIKE ?'
-        params.push( precisao ? produto : `%${produto}%` )
+
+    if (all != null) {
+        where += ' AND ( produto.produto LIKE ? OR produto.descricao_produto LIKE ? OR categoria.categoria LIKE ? OR preco.preco LIKE ?)'
+        params.push(`%${all}%`)
+        params.push(`%${all}%`)
+        params.push(`%${all}%`)
+        params.push(`%${all}%`)
+    } else {
+        
+        if( id != null ) { 
+            where += ' AND id_produto = ?'
+            limit = 'LIMIT 1'
+            params.push(id)
+        }
+
+        if (categoria != null) {
+            
+            where += isNaN(categoria) ? ' AND categoria.categoria LIKE ?' : ' AND categoria.id_categoria = ?'
+            params.push( isNaN(categoria) ? `%${categoria}%` : categoria )
+        }
+
+        if (preco != null) {
+            where += isNaN(categoria) ? ' AND preco.preco LIKE ?' : ' AND preco.id_preco = ?'
+            params.push( isNaN(categoria) ? `%${preco}%` : preco )
+        }
     }
 
     const query = `
-        SELECT categoria.id_categoria AS id, categoria.categoria, categoria.id_estado, estado.estado
-            FROM tb_categoria As categoria
-        JOIN tb_estado AS estado
-            ON estado.id_estado = categoria.id_estado
-        ${where} ${orderby} ${limit}` 
+        SELECT 
+                produto.id_produto As id, 
+                produto.produto, 
+                produto.descricao_produto AS descricao, 
+                produto.id_categoria AS idCategoria, 
+                categoria.categoria AS categoria, 
+                preco.idPreco, 
+                preco.preco, 
+                produto.imagem_produto AS img
+        FROM tb_produto AS produto
+        JOIN tb_preco_produto AS preco_produto
+            ON preco_produto.id_produto = produto.id_produto
+        JOIN tb_preco AS preco
+            ON preco.id_preco = preco_produto.id_preco
+        JOIN tb_categoria AS categoria
+            ON categoria.id_categoria = produto.id_categoria
+
+        ${where} ${orderby} ${limit}`
     const result = await mysql.execute(query, params)
 
     return result
@@ -45,18 +73,30 @@ const selectID = async (id = 0,estado = null) => {
 
     const params = [id]
 
-    let where = 'WHERE 1 = 1 AND id_categoria = ?'
+    let where = 'WHERE 1 = 1  AND categoria.id_estado = 2 AND id_produto = ?'
     
     if( estado != -1 ) { 
-        where += ' AND categoria.id_estado = ?'
+        where += ' AND produto.id_estado = ?'
         params.push( (estado == null) ? 2 : estado )
     }
 
     const query = `
-        SELECT categoria.id_categoria AS id, categoria.categoria, categoria.id_estado, estado.estado
-            FROM tb_categoria As categoria
-        JOIN tb_estado AS estado
-            ON estado.id_estado = categoria.id_estado 
+        SELECT 
+                produto.id_produto As id, 
+                produto.produto, 
+                produto.descricao_produto AS descricao, 
+                produto.id_categoria AS idCategoria, 
+                categoria.categoria AS categoria, 
+                preco.idPreco, 
+                preco.preco, 
+                produto.imagem_produto AS img
+        FROM tb_produto AS produto
+        JOIN tb_preco_produto AS preco_produto
+            ON preco_produto.id_produto = produto.id_produto
+        JOIN tb_preco AS preco
+            ON preco.id_preco = preco_produto.id_preco
+        JOIN tb_categoria AS categoria
+            ON categoria.id_categoria = produto.id_categoria
         ${where} LIMIT 1`
     const result = await mysql.execute(query, params);
 
@@ -152,15 +192,17 @@ const recover = async (id=null) => {
     return row(0,[])
 }
 
-const insert = async (categoria=null) => {
+const insert = async (produto=null,preco=null,categoria=null) => {
+    if( !isNaN(produto) || produto == null) return row(0,[])
+    if( !isNaN(preco) || preco == null) return row(0,[])
     if( !isNaN(categoria) || categoria == null) return row(0,[])
 
-    const verificar = await select(null,categoria,-1,1,true)
+    const verificar = await select(null,produto,-1,1,true)
 
     if(verificar.length >= 1) {
         if(verificar[0].id_estado != 2) return await recover(verificar[0].id) 
     } else {
-        const inserir = await mysql.execute('INSERT INTO tb_categoria(categoria) VALUES(?)', [categoria]);
+        const inserir = await mysql.execute('INSERT INTO tb_categoria(categoria) VALUES(?)', [produto]);
         console.log( inserir)
         if(inserir.affectedRows >= 1){
             return row( inserir.affectedRows ,await selectID(inserir.insertId,null) )

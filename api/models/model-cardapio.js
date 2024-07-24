@@ -11,7 +11,7 @@ const row = (affectedRows = 0, data = [], message=null) => {
 const select = async (all = null, produto = null, preco = null, categoria = null, limitRows = null) => {
 
     let limit = (limitRows == null) ? '' : (!isNaN(limitRows) ? `LIMIT ${limitRows}` : '')
-    let where = 'WHERE 1 = 1 AND produto.id_estado = 2 AND preco_produto.id_estado = 2 '
+    let where = 'WHERE 1 = 1 AND produto.id_estado = 2 AND categoria.id_estado = 2 AND preco_produto.id_estado = 2 '
     let orderby = 'ORDER BY 2 ASC'
     let params = []
 
@@ -57,7 +57,7 @@ const select = async (all = null, produto = null, preco = null, categoria = null
 
         ${where} ${orderby} ${limit}`
     const result = await mysql.execute(query, params)
-
+    console.log( result )
     return result
 }
 
