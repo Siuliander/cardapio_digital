@@ -1,13 +1,20 @@
 const express = require('express')
 const router = express.Router()
 
+const controllerProduto = require('../controllers/controller-produto')
 const upload = require('./../models/upload')
+
 
 router.get('/', async (req, res) => {
     let result = []
-    
-    res.status(200).json( result )
-  
+    let statusCode = 200
+    try {
+        result = await controllerProduto.getProdutoAll(req)
+    } catch (err) {
+        statusCode = 500
+    } finally {
+        res.status(statusCode).json( result )
+    }
 })
 
 router.get('/:id', async (req, res) => {

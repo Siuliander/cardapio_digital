@@ -10,7 +10,7 @@ const row = (affectedRows=0, data=[], message=null) => {
     }
 }
 
-const select = async (q=null, id=null, categoria=null, estado=null , limitRows = null, precisao=false) => {
+const select = async (id=null, all = null, produto = null, preco = null, categoria = null, limitRows = null) => {
 
     let limit = (limitRows==null) ? '' : (!isNaN(limitRows) ? `LIMIT ${limitRows}` : '')
     let where = 'WHERE 1 = 1 AND produto.id_estado = 2 AND categoria.id_estado = 2 AND preco_produto.id_estado = 2 '
@@ -52,7 +52,7 @@ const select = async (q=null, id=null, categoria=null, estado=null , limitRows =
                 produto.descricao_produto AS descricao, 
                 produto.id_categoria AS idCategoria, 
                 categoria.categoria AS categoria, 
-                preco.idPreco, 
+                preco.id_preco AS idPreco, 
                 preco.preco, 
                 produto.imagem_produto AS img
         FROM tb_produto AS produto
