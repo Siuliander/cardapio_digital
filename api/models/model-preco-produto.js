@@ -38,8 +38,8 @@ const update = async (idProduto=null, idPreco=null) => {
 }
 
 const insert = async (idProduto=null, idPreco=null) => {
-    if( !isNaN(idProduto) || idProduto == null) return 0
-    if( !isNaN(idPreco) || idPreco == null) return 0
+    if( isNaN(idProduto) || idProduto == null) return 0
+    // if( isNaN(idPreco) || idPreco == null) return 0
    
     const verificar = await select( idProduto , idPreco )
 

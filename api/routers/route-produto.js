@@ -19,11 +19,27 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     let result = []
-    res.status(200).json( result )
+    let statusCode = 200
+    try {
+        result = await controllerProduto.getProdutoID(req)
+    } catch (err) {
+        statusCode = 500
+    } finally {
+        res.status(statusCode).json( result )
+    }
 })
 
-router.post('/',  upload.single('file'), async (req, res) => {
-    res.status(200).json( req.file )
+// router.post('/',  upload.single('file'), async (req, res) => {
+router.post('/',  async (req, res) => {
+    let result = []
+    let statusCode = 200
+    try {
+        result = await controllerProduto.postProduto(req)
+    } catch (err) {
+        statusCode = 500
+    } finally {
+        res.status(statusCode).json( result )
+    }
 })
 
 router.put('/', async (req, res) => {
@@ -38,12 +54,27 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/', async (req, res) => {
     let result = []
-    res.status(200).json( result )
+    let statusCode = 200
+    try {
+        result = await controllerProduto.deleteProduto(req)
+    } catch (err) {
+        statusCode = 500
+    } finally {
+        res.status(statusCode).json( result )
+    }
 })
 
 router.delete('/:id', async (req, res) => {
     let result = []
-    res.status(200).json( result )
+    let statusCode = 200
+    try {
+        result = await controllerProduto.deleteProduto(req)
+    } catch (err) {
+        console.log( err)
+        statusCode = 500
+    } finally {
+        res.status(statusCode).json( result )
+    }
 })
 
 module.exports = router

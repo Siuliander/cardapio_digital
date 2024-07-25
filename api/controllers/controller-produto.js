@@ -15,7 +15,7 @@ const response = (data = [], error = []) => {
 				id: item.id,
 				produto: item.produto,
 				descricao: item.descricao,
-				preco: item.preco,
+				preco: item.preco || 0,
 				img: item.img,
 				categoria: item.categoria,
 				request: {
@@ -58,7 +58,7 @@ exports.getProdutoID = async (req) => {
     let error = null
     try {
         const id = req.params.id ||  null;
-        result = await modelProduto.selectID(id)
+        result = await modelProduto.selectID(id,null)
     } catch (err) {
         console.log(err)
     } finally {
@@ -71,9 +71,11 @@ exports.postProduto = async (req) => {
     let error = null
     try {
         const produto = req.params.produto || req.query.produto || req.body.produto ||  null;
+        const descricao = req.params.descricao || req.query.descricao || req.body.descricao ||  null;
         const categoria = req.params.categoria || req.query.categoria || req.body.categoria ||  null;
         const preco = req.params.preco || req.query.preco || req.body.preco ||  null;
-        result = await modelProduto.insert(produto,preco,categoria)
+
+        result = await modelProduto.insert(produto,descricao,preco,categoria)
         
     } catch (err) {
         // error = err
