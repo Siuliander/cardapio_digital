@@ -66,7 +66,7 @@ const select = async (id=null, all = null, produto = null, preco = null, categor
                 produto.imagem_produto AS img,
                 produto.id_estado AS estado
         FROM tb_produto AS produto
-        LEFT JOIN tb_preco_produto AS preco_produto
+         JOIN tb_preco_produto AS preco_produto
             ON preco_produto.id_produto = produto.id_produto
         LEFT JOIN tb_preco AS preco
             ON preco.id_preco = preco_produto.id_preco
@@ -83,7 +83,7 @@ const selectID = async (id = 0,estado = null) => {
 
     const params = [id]
 
-    let where = 'WHERE 1 = 1  AND categoria.id_estado = 2 AND produto.id_produto = ?'
+    let where = 'WHERE 1 = 1  AND categoria.id_estado = 2 AND produto.id_produto = ? AND preco_produto.id_estado = 2'
     
     if( estado != -1 ) { 
         where += ' AND produto.id_estado = ?'
@@ -113,24 +113,39 @@ const selectID = async (id = 0,estado = null) => {
 
     return result
 }
+const addPreco = async ( produto=null, preco = null ) => {
+    if( produto === null || isNaN(produto) ) return 0
+    if( preco === null || isNaN(preco) ) return 0
 
-const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) => {
+    const newPreco = await modelPreco.insert(preco)
+    const addPrecoProduto = await modelPrecoProduto.insert(produto,newPreco)
+    
+    return addPrecoProduto
+}
 
-    if( id == null || isNaN(id) ) return row(0,[])
-    if( 
-        /* ( estado == -1 ) ||*/ 
-        (
-            ( Newcategoria == null || !isNaN(Newcategoria) ) &&  ( Newestado == null || isNaN(Newestado) )
-        )
-    ) return row(0,[])
+const update = async (id=null, NewProduto=null, NewDescricao=null, NewPreco=null, Newcategoria=null, Newestado=null, estado=null) => {
+
+    if( id == null || isNaN(id) ) return row(0,[], "PRODUTO NÃO ENCONTRADO - DADOS INSUFICIENTES OU NO FORMATO INCORRECTO")
 
     let set = ''
     let where = 'WHERE 1 = 1'
     let limit = 'LIMIT 1'
     let params = []
 
-    if( Newcategoria != null && isNaN(Newcategoria) ) { 
-        set +=  (set=='') ? 'SET categoria = ?' : ', categoria = ?'
+    if( NewProduto != null && isNaN(NewProduto) ) { 
+        set +=  (set=='') ? 'SET produto = ?' : ', produto = ?'
+        params.push( NewProduto )
+    }
+
+    if( NewDescricao != null && isNaN(NewDescricao) ) { 
+        set +=  (set=='') ? 'SET descricao_produto = ?' : ', descricao_produto = ?'
+        params.push( NewDescricao )
+    }
+
+    if( Newcategoria != null && !isNaN(Newcategoria) ) { 
+        if ( (await modelCategoria.selectID(Newcategoria)).length != 1 ) return row(0,[], "CATEGORIA NÃO ENCONTRADA") 
+
+        set +=  (set=='') ? 'SET id_categoria = ?' : ', id_categoria = ?'
         params.push( Newcategoria )
     }
     
@@ -140,7 +155,7 @@ const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) =
     }
 
     if( id != null ) { 
-        where += ' AND id_categoria = ?'
+        where += ' AND id_produto = ?'
         limit = 'LIMIT 1'
         params.push(id)
     }
@@ -148,39 +163,44 @@ const update = async (id=null, Newcategoria=null, Newestado=null, estado=null) =
     if( estado != null && estado != -1 && !isNaN(estado) ) { 
         where += ' AND id_estado = ?'
         params.push( estado )
-    }
-
-    if( estado == null || isNaN(estado) ) { 
+    } else { 
         where += ' AND id_estado = 2'
         params.push( estado )
     }
     
     const verificarID = await selectID(id,-1)
-    const verificarCategoria = await select(null,Newcategoria,null,null,true)
+    const verificarProduto = await select(null, null, NewProduto, null, null, null, true)
 
     if(verificarID.length >= 1) {
         
-        if(verificarID[0].id_estado != 2) return row(0,[])
+        if(verificarID[0].estado != 2) return row(0,[], "PRODUTO NÃO ENCONTRADO")
 
-        if(verificarCategoria.length >= 1) {
-            if(verificarID[0].id == verificarCategoria[0].id) return row(0,verificarID)
-            if(verificarCategoria[0].estado == 1) return row(0,[])
+        if(verificarProduto.length >= 1) {
+            if(verificarID[0].id == verificarProduto[0].id) {
+                if( NewPreco != null && !isNaN(NewPreco) ) await addPreco( id , NewPreco )
+                return row(0,await selectID(id))
+            } else {
+                return row(0,[], "NOME DE PRODUTO NÃO PODE SER DUPLICADO")
+            }
+
+            if(verificarProduto[0].estado == 1) return row(0,[], "PRODUTO NÃO ENCONTRADO")
         }
 
-        const query = `UPDATE tb_categoria ${set} ${where} ${limit}`
+        const query = `UPDATE tb_produto ${set} ${where} ${limit}`
         const editar = await mysql.execute(query, params);
 
         if(editar.affectedRows >= 1){
-            return row(editar.affectedRows,await select(id,Newcategoria,null,null,true))
+            if( NewPreco != null && !isNaN(NewPreco) ) await addPreco( id , NewPreco )
+            return row(editar.affectedRows,await selectID(id))
         }
     }
     
-    return row(0,[])
+    return row(0,[], "PRODUTO NÃO ENCONTRADO")
 }
 
 const recover = async (id=null) => {
 
-    if( id == null || isNaN(id) ) return row(0,[])
+    if( id == null || isNaN(id) ) return row(0,[], "PRODUTO NÃO ENCONTRADO - DADOS INSUFICIENTES")
     
     let where = 'WHERE 1 = 1'
     let limit = 'LIMIT 1'
@@ -193,18 +213,19 @@ const recover = async (id=null) => {
     }
     
     const recuperar = await mysql.execute(`UPDATE tb_produto SET id_estado = 2 ${where} ${limit}`, params);
-    console.log( recuperar )
+    
     if(recuperar.affectedRows >= 1){
         return row(recuperar.affectedRows,await selectID(id,null))
     }
     
-    return row(0,[])
+    return row(0,[],"PRODUTO NÃO ENCONTRADO")
 }
 
 const insert = async (produto=null,descricao=null, preco=null,categoria=null) => {
-    if( !isNaN(produto) || produto == null) return row(0,[])
-    // if( !isNaN(preco) || preco == null) return row(0,[])
-    if( isNaN(categoria) || categoria == null) return row(0,[])
+    if( !isNaN(produto) || produto == null) return row(0,[], "NOME DE PRODUTO NÃO INFORMADO")
+    if( !isNaN(preco) || preco == null) preco = 0
+    if( isNaN(categoria) || categoria == null || ( (await modelCategoria.selectID(categoria)).length != 1 )) return row(0,[], "CATEGORIA NÃO ENCONTRADA") 
+       
     
     const verificar = await select(null, null, produto, null, null, null, false)
 
@@ -214,13 +235,16 @@ const insert = async (produto=null,descricao=null, preco=null,categoria=null) =>
         const inserir = await mysql.execute('INSERT INTO tb_produto (id_categoria, produto, descricao_produto) VALUES(?,?,?)', [categoria, produto, descricao]);
         
         if(inserir.affectedRows >= 1){
+            /*
             const newPreco = await modelPreco.insert(preco)
             const addPrecoProduto = await modelPrecoProduto.insert(inserir.insertId,newPreco)
+            */
+            await addPreco( inserir.insertId , preco )
             return row( inserir.affectedRows ,await selectID(inserir.insertId,null) )
         }
     }
 
-    return row(0,[])
+    return row(0,[], "FALHA AO ADICIONAR PRODUTO")
 }
 
 const deleted = async (id=null) => {

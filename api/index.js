@@ -7,9 +7,10 @@ const {networkInterfaces} = require('os')
 
 const app = express();
 
-
+// app.use( express.urlencoded( { extended : true , limit : 10000 , parameterLimit : 2 }))
 app.use( bodyParser.json() );
 app.use( bodyParser.raw() )
+app.use( bodyParser.urlencoded( { extended : false }) )
 
 app.use( xss() )
 

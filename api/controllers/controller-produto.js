@@ -89,9 +89,14 @@ exports.putProduto = async (req) => {
     let result = [];
     let error = null
     try {
+        
         const id = req.params.id || req.query.id || req.body.id ||  null;
+        const produto = req.params.produto || req.query.produto || req.body.produto ||  null;
+        const descricao = req.params.descricao || req.query.descricao || req.body.descricao ||  null;
         const categoria = req.params.categoria || req.query.categoria || req.body.categoria ||  null;
-        result = await modelProduto.update(id,categoria,null,null)
+        const preco = req.params.preco || req.query.preco || req.body.preco ||  null;
+
+        result = await modelProduto.update(id,produto,descricao,preco,categoria)
         
     } catch (err) {
         // error = err

@@ -28,7 +28,7 @@ const select = async (id=null, preco=null) => {
 }
 
 const insert = async (preco=null) => {
-    if( !isNaN(preco) || preco == null) return 0
+    if( isNaN(preco) || preco === null) return 0
 
     const verificar = await select(null,preco)
 

@@ -44,12 +44,26 @@ router.post('/',  async (req, res) => {
 
 router.put('/', async (req, res) => {
     let result = []
-    res.status(200).json( result )
+    let statusCode = 200
+    try {
+        result = await controllerProduto.putProduto(req)
+    } catch (err) {
+        statusCode = 500
+    } finally {
+        res.status(statusCode).json( result )
+    }
 })
 
 router.put('/:id', async (req, res) => {
     let result = []
-    res.status(200).json( result )
+    let statusCode = 200
+    try {
+        result = await controllerProduto.putProduto(req)
+    } catch (err) {
+        statusCode = 500
+    } finally {
+        res.status(statusCode).json( result )
+    }
 })
 
 router.delete('/', async (req, res) => {

@@ -57,7 +57,6 @@ const select = async (all = null, produto = null, preco = null, categoria = null
 
         ${where} ${orderby} ${limit}`
     const result = await mysql.execute(query, params)
-    console.log( result )
     return result
 }
 
