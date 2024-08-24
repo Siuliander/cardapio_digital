@@ -4,6 +4,11 @@ const xss = require('xss-clean');
 const path = require('path')
 const {networkInterfaces} = require('os')
 
+const cors = require('cors')
+const headersPermitidos = require('./cors.config')
+
+app.use( cors ( headersPermitidos ) )
+
 
 const app = express();
 
