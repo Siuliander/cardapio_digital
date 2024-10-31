@@ -153,6 +153,7 @@ create table if not exists tb_itens
     id_preco_produto int not null,
     foreign key(id_preco_produto) references tb_preco_produto(id_preco_produto),
     id_estado int not null default 2,
+    quantidade INT NULL DEFAULT '1',
     foreign key(id_estado) references tb_estado(id_estado)
 );
 
