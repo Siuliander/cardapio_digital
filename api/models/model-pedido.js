@@ -1,54 +1,56 @@
 const mysql = require('../database/mysql')
+const modelItemPedido = require("./model-ItensPedido")
 
-const modelCategoria = require("./model-categoria")
-const modelPreco = require("./model-preco")
-const modelPrecoProduto = require("./model-preco-produto")
-
-const row = (affectedRows=0, data=[], message=null) => {
+const row = (affectedRows=0, data=[], message=null, items = false) => {
     return {
         affectedRows,
         rows: data,
+        items: items ?? [],
         message:message
-    }
+    } 
 }
 
-const select = async (id=null, idCliente = null, cliente = null, limitRows = null, estado = true) => {
+const select = async (id=null, q = null, idVendedor = null, idCliente = null,total = 0, qtdProduto = 0, limitRows = null, estado = true) => {
 
     let limit = (limitRows==null) ? '' : (!isNaN(limitRows) ? `LIMIT ${limitRows}` : '')
-    let where = 'WHERE 1 = 1 AND pedido.id_estado = 2 '
+    let ANDWhere = 'AND pedido.id_estado = 2 '
     let orderby = 'ORDER BY 1 DESC'
     let params = []
     
     if ( !!estado ) {
-        where += ' AND pedido.id_estado = 2 '
+        ANDWhere += ' AND pedido.id_estado = 2 '
     }
 
     if (idCliente != null) {
-        where += ' AND cliente.id_cliente = ? '
-        params.push(`%${idCliente}%`)
-    } 
-
-    if (cliente != null) {
-        where += ' AND cliente.id_cliente = ? '
+        ANDWhere += ' AND cliente.id_cliente = ? '
         params.push(`%${idCliente}%`)
     } 
     
     if( id != null ) { 
-        where += ' AND id_produto = ?'
+        ANDWhere += ' AND id_produto = ?'
         limit = 'LIMIT 1'
         params.push(id)
     }
 
-     
+    if (q != null) {
+        ANDWhere += ' AND ( notaPedido = ? OR cliente.id_cliente = ?  ) '
+        params.push(`%${q}%`)
+        params.push(`%${q}%`)
+    } 
 
+     
     const query = `
-        SELECT 
+        SELECT  
             pedido.id_pedido as id,
+            pedido.id_funcionario as idVendedor,
             pessoaVendedor.identidade as identidadeVendedor,
             pessoaVendedor.nome as nomeVendedor,
+            pedido.id_cliente as idCliente,
             pessoaCliente.identidade as identidadeCliente,
             pessoaCliente.nome as nomeCliente,
-            SUM(preco.preco) as total,
+            SUM(preco.preco * itens.quantidade) as total,
+            SUM(itens.quantidade) as qtdProduto,
+            pedido.descricao_pedido as notaPedido,
             pedido.id_estado AS estado
         FROM tb_pedido AS pedido
 
@@ -70,12 +72,14 @@ const select = async (id=null, idCliente = null, cliente = null, limitRows = nul
                     ON preco.id_preco = preco_produto.id_preco
 
         WHERE
-            pedido.id_estado = 2 
+            1 = 1 
             AND itens.id_estado = 2
-
-        GROUP BY id
-
-        ${where} ${orderby} ${limit}`
+            ${ANDWhere}
+        GROUP BY 
+            id    
+        ${orderby}
+        ${limit}`
+    
     const result = await mysql.execute(query, params)
     
     return result
@@ -85,21 +89,25 @@ const selectID = async (id = 0,estado = null) => {
 
     const params = [id]
 
-    let where = 'WHERE 1 = 1 AND pedido.id_pedido = ? '
+    let ANDWhere = ' AND pedido.id_pedido = ? '
     
     if( estado != -1 ) { 
-        where += ' AND pedido.id_estado = ?'
+        ANDWhere += ' AND pedido.id_estado = ?'
         params.push( (estado == null) ? 2 : estado )
     }
 
     const query = `
         SELECT 
             pedido.id_pedido as id,
+            pedido.id_funcionario as idVendedor,
             pessoaVendedor.identidade as identidadeVendedor,
             pessoaVendedor.nome as nomeVendedor,
+            pedido.id_cliente as idCliente,
             pessoaCliente.identidade as identidadeCliente,
             pessoaCliente.nome as nomeCliente,
-            SUM(preco.preco) as total,
+            SUM(preco.preco * itens.quantidade) as total,
+            SUM(itens.quantidade) as qtdProduto,
+            pedido.descricao_pedido as notaPedido,
             pedido.id_estado AS estado
         FROM tb_pedido AS pedido
 
@@ -121,22 +129,15 @@ const selectID = async (id = 0,estado = null) => {
                     ON preco.id_preco = preco_produto.id_preco
 
         WHERE
-            AND itens.id_estado = 2
-
-        GROUP BY id
-        ${where} LIMIT 1`
+            1 = 1 
+            AND itens.id_estado = 2 
+            ${ANDWhere}
+        GROUP BY 
+            id 
+        LIMIT 1`
     const result = await mysql.execute(query, params);
 
     return result
-}
-const addItens = async ( pedido=null, itens = [] ) => {
-    if( produto === null || isNaN(produto) ) return 0
-    if( itens === null || !isNaN(itens) ) return 0
-    if( itens.length < 1 ) return 0
-    
-    const itensAdded = await modelItens.insert(pedido, itens)
-    
-    return itensAdded
 }
 
 const update = async (id=null, NewProduto=null, NewDescricao=null, NewPreco=null, Newcategoria=null, Newestado=null, estado=null) => {
@@ -237,30 +238,27 @@ const recover = async (id=null) => {
     return row(0,[],"PRODUTO NÃO ENCONTRADO")
 }
 
-const insert = async (produto=null,descricao=null, preco=null,categoria=null) => {
-    if( !isNaN(produto) || produto == null) return row(0,[], "NOME DE PRODUTO NÃO INFORMADO")
-    if( !isNaN(preco) || preco == null) preco = 0
-    if( isNaN(categoria) || categoria == null || ( (await modelCategoria.selectID(categoria)).length != 1 )) return row(0,[], "CATEGORIA NÃO ENCONTRADA") 
-       
-    
-    const verificar = await select(null, null, produto, null, null, null, false)
+const insert = async (itens=[],nota=null, cliente=1,vendedor=null) => {
 
-    if(verificar.length >= 1) {
-        if(verificar[0].estado && verificar[0].estado != 2) return await recover(verificar[0].id) 
-    } else {
-        const inserir = await mysql.execute('INSERT INTO tb_produto (id_categoria, produto, descricao_produto) VALUES(?,?,?)', [categoria, produto, descricao]);
+    if( Array.isArray(itens) && itens.length >= 1) {
+
+        itens.push( {
+			"produto"	: 0,
+			"quantidade": 0
+		 } )
+
+        const inserir = await mysql.execute('INSERT INTO tb_pedido (id_funcionario, id_cliente, descricao_pedido) VALUES(?,?,?)', [vendedor, cliente, nota]);
         
         if(inserir.affectedRows >= 1){
-            /*
-            const newPreco = await modelPreco.insert(preco)
-            const addPrecoProduto = await modelPrecoProduto.insert(inserir.insertId,newPreco)
-            */
-            await addPreco( inserir.insertId , preco )
-            return row( inserir.affectedRows ,await selectID(inserir.insertId,null) )
+            itens.forEach( async item => {
+                const addItem =  await modelItemPedido.insert( inserir.insertId, item.produto, item.quantidade,null)
+                // produto.push( addItem )  
+            })
+            return row( inserir.affectedRows ,await selectID(inserir.insertId,null),null, [] )
         }
-    }
+    } 
 
-    return row(0,[], "FALHA AO ADICIONAR PRODUTO")
+    return row(0,[], "FALHA AO ADICIONAR OU PROCESSAR PEDIDO")
 }
 
 const deleted = async (id=null) => {
@@ -269,17 +267,33 @@ const deleted = async (id=null) => {
     const verificarID = await selectID(id,-1)
 
     if(verificarID.length >= 1) {
-        if( verificarID[0].estado && verificarID[0].estado != 2) return row(0,[],"PRODUTO NÃO ENCONTRADO")
+        if( verificarID[0].estado && verificarID[0].estado != 2) return row(0,[],"PEDIDO NÃO ENCONTRADO")
 
-        const query = `UPDATE tb_produto SET id_estado = 1 WHERE 1 = 1 AND id_produto = ? LIMIT 1`
-        const editar = await mysql.execute(query, [id]);
+        const editar = await mysql.execute(`UPDATE tb_pedido SET id_estado = 1 WHERE id_pedido = ? LIMIT 1`, [id]);
 
         if(editar.affectedRows >= 1){
-            return row(editar.affectedRows,[], "PRODUTO ELIMINADO COM SUCESSO")
+            await mysql.execute(`UPDATE tb_itens SET id_estado = 1 WHERE id_pedido = ?`, [id]);
+            return row(editar.affectedRows,[], "PEDIDO ELIMINADO OU CANCELADO COM SUCESSO")
         }
     }
 
-    return row(0,[],"PRODUTO NÃO ENCONTRADO")
+    return row(0,[],"PEDIDO NÃO ENCONTRADO")
+}
+
+const deletedItemPedido = async (idPedido=0,itens=[]) => {
+
+    if( Array.isArray(itens) && itens.length >= 1) {
+
+        let count = 0
+        itens.forEach( async item => {
+            await modelItemPedido.deleted( idPedido , item.id )
+            count += 1
+        })
+            
+        return row( count ,await selectID(idPedido,null),null, [] )
+    } 
+
+    return row(0,[], "FALHA AO ALTERAR PEDIDO")
 }
 
 
@@ -290,5 +304,6 @@ module.exports = {
     insert,
     update,
     deleted,
+    deletedItemPedido,
     recover
 }
