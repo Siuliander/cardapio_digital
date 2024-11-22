@@ -18,3 +18,19 @@ exports.execute = (query, params=[]) => {
 	})
 }
 
+/*
+const { createPool } = require("@vercel/postgres")
+
+const postgresql = createPool({
+	"connectionString" : process.env.POSTGRES_STRING_CONNECTION || null,
+});
+
+exports.executePostgreSQL = (query, params=[]) => {
+	return new Promise( (resolve,reject) => {
+		postgresql.query(query,params,(error, result, fields) => {
+			if(error){ reject(error) }
+			else{ resolve(result) }
+		})
+	})
+}
+*/

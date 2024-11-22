@@ -1,12 +1,13 @@
 {
 	"env": {
+		"POSTGRES_STRING_CONNECTION": "postgres://default:Ids8oDgLh5cX@ep-dark-bush-a4g1w1uo.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require",
 		"MYSQL_LIMIT_CONNECTION": 999999,
 		"MYSQL_USER": "root",
 		"MYSQL_PASSWRD": "",
 		"MYSQL_DATABASE": "db_cardapio",
 		"MYSQL_HOST": "localhost",
 		"MYSQL_PORT": 3306,
-		"API_HOST": "localhost" ,
+		"API_HOST": "http://localhost" ,
 		"API_PORT": 3000
 	}
 }
