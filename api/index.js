@@ -38,6 +38,7 @@ const rotaCliente = require('./routers/route-cliente');
 const rotaCardapio = require('./routers/route-cardapio');
 const rotaProduto = require('./routers/route-produto');
 const rotaUpload = require('./routers/route-upload');
+const rotaPedido = require('./routers/route-pedido');
 
 /**
  * USANDO OU CRIANDO AS ROTAS
@@ -47,6 +48,7 @@ app.use('/categoria/',rotaCategoria);
 app.use('/cliente/',rotaCliente);
 app.use('/produto/',rotaProduto);
 app.use('/upload/',rotaUpload);
+app.use('/pedido/',rotaPedido);
 
 
 
