@@ -37,7 +37,7 @@ exports.getCategoriaAll = async (req) => {
         const estado = req.params.estado || req.query.estado || req.body.estado ||  2;
         const limit = req.params.limit || req.query.limit || req.body.limit || null;
 
-       // result = await modelCategoria.select(id,categoria,estado,limit)
+       result = await modelCategoria.select(id,categoria,estado,limit)
         
     } catch (err) {
         // error = err
@@ -65,7 +65,8 @@ exports.postCategoria = async (req) => {
     let error = null
     try {
         const categoria = req.params.categoria || req.query.categoria || req.body.categoria ||  null;
-        // result = await modelCategoria.insert(categoria)
+        
+        result = await modelCategoria.insert(categoria)
         
     } catch (err) {
         // error = err
