@@ -2,14 +2,19 @@ const mysql = require('../database/mysql')
 
 const select = async (idProduto=null, idPreco=null) => {
 
-    if( isNaN(idProduto) || idProduto == null) return []
-    if( isNaN(idPreco) || idPreco == null) return []
+    if( (isNaN(idProduto) || idProduto == null) && (isNaN(idPreco) || idPreco == null) ) return []
+
+    let ANDWhere = ""
+    let params = []
+
+    if( !isNaN(idProduto) && idProduto != null) ANDWhere += " AND id_produto = ?"; params.push(idProduto)
+    if( !isNaN(idPreco) && idPreco != null) ANDWhere += " AND id_preco = ?"; params.push(idPreco)
    
     const query = `
         SELECT id_preco_produto AS id, preco_produto.id_produto AS idproduto, preco_produto.id_preco AS idpreco, preco_produto.id_estado AS estado 
             FROM tb_preco_produto As preco_produto
-        WHERE id_produto = ? AND id_preco = ? LIMIT 1` 
-    const result = await mysql.execute( query , [idProduto,idPreco] )
+        WHERE 1 = 1 ${ANDWhere} ORDER BY id DESC LIMIT 1` 
+    const result = await mysql.execute( query , params )
     return result
 }
 
