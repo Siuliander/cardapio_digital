@@ -92,6 +92,21 @@ exports.getPedidoID = async (req) => {
     }
 }
 
+exports.getDetalhePedidoID = async (req) => {
+    let resultPedido = [];
+    let resultItems = [];
+    let error = null
+    try {
+        const id = req.params.id ||  null;
+        resultPedido = await modelPedido.selectID(id,null)
+        resultItems = await modelItemPedido.selectItensPedido(null,id,null,null)
+    } catch (err) {
+        console.log(err)
+    } finally {
+        return response(modelPedido.row(0,resultPedido,null, resultItems),error)
+    }
+}
+
 exports.postPedido = async (req) => {
     let result = [];
     let resultItems = [];

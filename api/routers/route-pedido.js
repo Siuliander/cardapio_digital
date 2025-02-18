@@ -28,6 +28,18 @@ router.get('/:id', async (req, res) => {
     }
 })
 
+router.get('/detalhe/:id', async (req, res) => {
+    let result = []
+    let statusCode = 200
+    try {
+        result = await controllerPedido.getDetalhePedidoID(req)
+    } catch (err) {
+        statusCode = 500
+    } finally {
+        res.status(statusCode).json( result )
+    }
+})
+
 // router.post('/',  upload.single('file'), async (req, res) => {
 router.post('/',  async (req, res) => {
     let result = []
